@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AgGridReact } from 'ag-grid-react';
 import { themeQuartz, type ColDef, type GridApi, type GridReadyEvent } from 'ag-grid-community';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { useLazyGetQuickBooksArAgingReportQuery } from '../svc/api';
 import type {
   QuickBooksArAgingResponse,
@@ -10,7 +12,7 @@ import type {
 import { supabase } from '../lib/supaBaseClient';
 import { useAuth } from '../auth/AuthProvider';
 
-type GridRow = Record<string, string | number | null | undefined>;
+type GridRow = Record<string, string | number | boolean | null | undefined>;
 type BucketMeta = { label: string; field: string; slug: string };
 
 const bucketFieldName = (label: string) =>
@@ -61,6 +63,8 @@ export default function Dashboard() {
     return String(v);
   };
 
+  const actionTakenOptions = ['Not Started', 'Contacted', 'Followed Up', 'Resolved'];
+
   const createQuickBooksTable = (response: QuickBooksArAgingResponse) => {
     const bucketKeys = Object.keys(response.rows[0]?.buckets ?? {});
     const bucketMeta: BucketMeta[] = bucketKeys.map((key) => ({
@@ -94,8 +98,42 @@ export default function Dashboard() {
         valueFormatter: (p) => currency(p.value),
         minWidth: 140
       },
-      { field: 'recommended_bucket', headerName: 'Recommended Bucket', minWidth: 160 },
       { field: 'recommended_action', headerName: 'Recommended Action', minWidth: 220 },
+      {
+        field: 'action_taken',
+        headerName: 'Action Taken',
+        editable: true,
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: { values: actionTakenOptions },
+        minWidth: 160
+      },
+      {
+        field: 'slack_updated',
+        headerName: 'Slack Updated',
+        editable: true,
+        cellDataType: 'boolean',
+        cellRenderer: 'agCheckboxCellRenderer',
+        cellEditor: 'agCheckboxCellEditor',
+        minWidth: 140
+      },
+      {
+        field: 'follow_up',
+        headerName: 'Follow Up',
+        editable: true,
+        cellDataType: 'boolean',
+        cellRenderer: 'agCheckboxCellRenderer',
+        cellEditor: 'agCheckboxCellEditor',
+        minWidth: 130
+      },
+      {
+        field: 'escalation',
+        headerName: 'Escalation',
+        editable: true,
+        cellDataType: 'boolean',
+        cellRenderer: 'agCheckboxCellRenderer',
+        cellEditor: 'agCheckboxCellEditor',
+        minWidth: 130
+      },
       {
         field: 'oldest_invoice_days_past_due',
         headerName: 'Days Past Due',
@@ -115,10 +153,13 @@ export default function Dashboard() {
         customer: row.customer,
         total_balance: row.total_balance,
         credits: row.credits,
-        recommended_bucket: row.recommended_bucket,
         recommended_action: row.recommended_action,
         oldest_invoice_days_past_due: row.oldest_invoice?.days_past_due ?? null,
-        oldest_invoice_amount: row.oldest_invoice?.amount ?? null
+        oldest_invoice_amount: row.oldest_invoice?.amount ?? null,
+        action_taken: 'Not Started',
+        slack_updated: false,
+        follow_up: false,
+        escalation: false
       };
 
       bucketMeta.forEach(({ label, field }) => {
@@ -284,13 +325,70 @@ export default function Dashboard() {
       isActive ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
     }`;
 
+  const user = session?.user;
+
+  const userDisplayName =
+    (user?.user_metadata?.full_name as string | undefined) ??
+    (user?.user_metadata?.name as string | undefined) ??
+    (user?.user_metadata?.user_name as string | undefined) ??
+    user?.email ??
+    'Signed in user';
+
+  const userEmail =
+    (user?.email as string | undefined) ??
+    (user?.user_metadata?.email as string | undefined) ??
+    undefined;
+
+  const avatarUrl =
+    (user?.user_metadata?.avatar_url as string | undefined) ??
+    (user?.user_metadata?.picture as string | undefined) ??
+    (user?.user_metadata?.avatar as string | undefined);
+
+  const userInitials = useMemo(() => {
+    const source = userDisplayName?.trim() || userEmail || '';
+    if (!source) return '?';
+    const parts = source.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) {
+      return parts[0]!.slice(0, 2).toUpperCase();
+    }
+    return (
+      parts
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() ?? '')
+        .join('') || '?'
+    );
+  }, [userDisplayName, userEmail]);
+
   return (
-    <div className="grid gap-3 p-4">
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="m-0 text-2xl font-semibold text-slate-900">Collections</h1>
-        <button
-          onClick={connectQuickBooks}
-          disabled={startingQuickBooksAuth || !session}
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <span className="text-lg font-semibold tracking-tight text-slate-900">
+          Seso Labor Collections Tracker
+        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Avatar>
+              {avatarUrl ? <AvatarImage src={avatarUrl} alt={userDisplayName} /> : null}
+              <AvatarFallback>{userInitials}</AvatarFallback>
+            </Avatar>
+            <div className="hidden flex-col leading-tight sm:flex">
+              <span className="text-sm font-medium text-slate-900">{userDisplayName}</span>
+              {userEmail ? <span className="text-xs text-slate-500">{userEmail}</span> : null}
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => supabase.auth.signOut()}>
+            Sign out
+          </Button>
+        </div>
+      </nav>
+      <main className="flex-1 p-4">
+        <div className="grid gap-4">
+          <header className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <h1 className="m-0 text-2xl font-semibold text-slate-900">Collections</h1>
+            <button
+              onClick={connectQuickBooks}
+              disabled={startingQuickBooksAuth || !session}
           className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {startingQuickBooksAuth ? 'Redirecting…' : 'Connect QuickBooks'}
@@ -323,61 +421,57 @@ export default function Dashboard() {
           >
             Export CSV
           </button>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-          >
-            Sign out
-          </button>
         </div>
-      </header>
+          </header>
 
-      <nav className="flex flex-wrap items-center gap-2 text-sm">
-        <NavLink to="/" end className={navLinkClass}>
-          All
-        </NavLink>
-        {bucketTabs.map((bucket) => (
-          <NavLink
-            key={bucket.slug}
-            to={`/bucket/${bucket.slug}`}
-            className={navLinkClass}
-          >
-            {bucket.label}
-          </NavLink>
-        ))}
-      </nav>
+          <nav className="flex flex-wrap items-center gap-2 text-sm">
+            <NavLink to="/" end className={navLinkClass}>
+              All
+            </NavLink>
+            {bucketTabs.map((bucket) => (
+              <NavLink
+                key={bucket.slug}
+                to={`/bucket/${bucket.slug}`}
+                className={navLinkClass}
+              >
+                {bucket.label}
+              </NavLink>
+            ))}
+          </nav>
 
-      {quickBooksGeneratedAtLabel && (
-        <div className="text-xs text-slate-500">
-          QuickBooks AR aging generated {quickBooksGeneratedAtLabel}
+          {quickBooksGeneratedAtLabel && (
+            <div className="text-xs text-slate-500">
+              QuickBooks AR aging generated {quickBooksGeneratedAtLabel}
+            </div>
+          )}
+
+          {connectError && <div className="text-sm text-red-500">{connectError}</div>}
+          {connectSuccess && <div className="text-sm text-green-600">{connectSuccess}</div>}
+          {reportError && <div className="text-sm text-red-500">{reportError}</div>}
+
+          <div className="h-[70vh] w-full rounded-lg border border-slate-200 bg-white">
+            <AgGridReact<GridRow>
+              theme={themeQuartz}
+              rowData={displayedRows}
+              columnDefs={displayedColumns}
+              defaultColDef={defaultColDef}
+              pagination
+              paginationPageSize={50}
+              animateRows
+              onGridReady={onGridReady}
+              className="h-full w-full"
+            />
+          </div>
+
+          {!quickBooksTable && !fetchingArReport && (
+            <div className="text-sm text-slate-500">Run the AR aging report to see results.</div>
+          )}
+
+          {quickBooksTable && displayedRows.length === 0 && !fetchingArReport && (
+            <div className="text-sm text-slate-500">No customers found in this bucket.</div>
+          )}
         </div>
-      )}
-
-      {connectError && <div className="text-sm text-red-500">{connectError}</div>}
-      {connectSuccess && <div className="text-sm text-green-600">{connectSuccess}</div>}
-      {reportError && <div className="text-sm text-red-500">{reportError}</div>}
-
-      <div className="h-[70vh] w-full rounded-lg border border-slate-200 bg-white">
-        <AgGridReact<GridRow>
-          theme={themeQuartz}
-          rowData={displayedRows}
-          columnDefs={displayedColumns}
-          defaultColDef={defaultColDef}
-          pagination
-          paginationPageSize={50}
-          animateRows
-          onGridReady={onGridReady}
-          className="h-full w-full"
-        />
-      </div>
-
-      {!quickBooksTable && !fetchingArReport && (
-        <div className="text-sm text-slate-500">Run the AR aging report to see results.</div>
-      )}
-
-      {quickBooksTable && displayedRows.length === 0 && !fetchingArReport && (
-        <div className="text-sm text-slate-500">No customers found in this bucket.</div>
-      )}
+      </main>
     </div>
   );
 }

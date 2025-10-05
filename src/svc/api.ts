@@ -10,6 +10,18 @@ export type QuickBooksArAgingRow = {
   credits: number;
   recommended_bucket: string;
   recommended_action: string;
+  customer_id?: string;
+  external_ref?: string;
+  action_taken?: string;
+  slack_updated?: boolean;
+  follow_up?: boolean;
+  escalation?: boolean;
+  status?: {
+    action_taken?: string;
+    slack_updated?: boolean;
+    follow_up?: boolean;
+    escalation?: boolean;
+  } | null;
   oldest_invoice?: {
     doc_num?: string;
     txn_type?: string;
@@ -22,6 +34,19 @@ export type QuickBooksArAgingRow = {
 export type QuickBooksArAgingResponse = {
   generated_at: string;
   rows: QuickBooksArAgingRow[];
+};
+
+export type UpdateCustomerStatusRequest = {
+  customer_id?: string;
+  external_ref?: string;
+  action_taken?: string | null;
+  slack_updated?: boolean;
+  follow_up?: boolean;
+  escalation?: boolean;
+};
+
+export type UpdateCustomerStatusResponse = {
+  ok: boolean;
 };
 
 const baseQuery = fetchBaseQuery({
@@ -55,6 +80,16 @@ export const api = createApi({
         queryString
           ? `/qbo/reports/ar-aging-detail/simplified?${queryString}`
           : '/qbo/reports/ar-aging-detail/simplified'
+    }),
+    updateCustomerStatus: build.mutation<
+      UpdateCustomerStatusResponse,
+      UpdateCustomerStatusRequest
+    >({
+      query: (body) => ({
+        url: '/qbo/customers/status',
+        method: 'POST',
+        body
+      })
     })
   })
 });
@@ -63,5 +98,6 @@ export const {
   useGetInvoicesQuery,
   useSyncQuickBooksMutation,
   useGetQuickBooksArAgingReportQuery,
-  useLazyGetQuickBooksArAgingReportQuery
+  useLazyGetQuickBooksArAgingReportQuery,
+  useUpdateCustomerStatusMutation
 } = api;

@@ -10,7 +10,6 @@ import {
 } from 'ag-grid-community';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import logoUrl from '@/assets/seso-logo.svg';
 import {
   useLazyGetQuickBooksArAgingReportQuery,
   useUpdateCustomerStatusMutation
@@ -451,7 +450,6 @@ export default function Dashboard() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
         <div className="flex items-center gap-3">
-          <img src={logoUrl} alt="Seso Labor logo" className="h-10 w-10" />
           <span className="text-lg font-semibold tracking-tight text-slate-900">
             Seso Labor Collections Tracker
           </span>

@@ -87,7 +87,7 @@ export const api = createApi({
     >({
       query: (body) => ({
         url: '/qbo/customers/status',
-        method: 'POST',
+        method: 'PATCH',
         body
       })
     })

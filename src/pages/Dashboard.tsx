@@ -282,8 +282,8 @@ export default function Dashboard() {
       }
 
       const payload: UpdateCustomerStatusRequest = {
-        ...(customerId ? { customer_id: customerId } : {}),
-        ...(externalRef ? { external_ref: externalRef } : {})
+        customer_id: customerId,
+        external_ref: externalRef
       };
 
       if (field === 'action_taken') {

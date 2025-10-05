@@ -185,7 +185,8 @@ export default function Dashboard() {
         follow_up: Boolean(followUpValue),
         escalation: Boolean(escalationValue),
         customer_id: row.customer_id ?? null,
-        external_ref: row.external_ref ?? null
+        external_ref: row.external_ref ?? null,
+        customer_name: row.customer_name ?? row.customer
       };
 
       bucketMeta.forEach(({ label, field }) => {
@@ -281,9 +282,14 @@ export default function Dashboard() {
         return;
       }
 
+      const customerNameValue = (event.data?.customer_name ?? event.data?.customer) as
+        | string
+        | undefined;
+
       const payload: UpdateCustomerStatusRequest = {
         customer_id: customerId,
-        external_ref: externalRef
+        external_ref: externalRef,
+        customer_name: customerNameValue
       };
 
       if (field === 'action_taken') {

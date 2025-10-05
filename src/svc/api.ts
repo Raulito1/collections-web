@@ -16,6 +16,7 @@ export type QuickBooksArAgingRow = {
   slack_updated?: boolean;
   follow_up?: boolean;
   escalation?: boolean;
+  customer_name?: string;
   status?: {
     action_taken?: string;
     slack_updated?: boolean;
@@ -39,6 +40,7 @@ export type QuickBooksArAgingResponse = {
 export type UpdateCustomerStatusRequest = {
   customer_id?: string;
   external_ref?: string;
+  customer_name?: string;
   action_taken?: string | null;
   slack_updated?: boolean;
   follow_up?: boolean;

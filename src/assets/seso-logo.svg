@@ -1,19 +1,91 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title">
-  <title id="title">Seso Labor Logo</title>
-  <rect width="160" height="160" fill="none" />
-  <circle cx="80" cy="70" r="52" fill="#0f5c2a" />
-  <path
-    d="M16 124c18-22 42-34 64-34s46 12 64 34"
-    fill="none"
-    stroke="#0f5c2a"
-    stroke-width="30"
-    stroke-linecap="round"
-  />
-  <path
-    d="M32 144c14-16 30-24 48-24s34 8 48 24"
-    fill="none"
-    stroke="#0f5c2a"
-    stroke-width="24"
-    stroke-linecap="round"
-  />
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 600"
+  role="img"
+  aria-label="Seso Labor logo"
+>
+  <title>Seso Labor</title>
+  <defs>
+    <!-- Themeable colors -->
+    <style>
+      :root {
+        --logo-color: #0e7a2a; /* green */
+        --text-color: #ffffff; /* white; change as needed */
+      }
+    </style>
+
+    <!-- Clip to circular badge -->
+    <clipPath id="badgeClip">
+      <circle cx="256" cy="240" r="200"/>
+    </clipPath>
+  </defs>
+
+  <!-- Badge (sun + fields), all clipped to a circle -->
+  <g clip-path="url(#badgeClip)">
+    <!-- Outer ring -->
+    <circle cx="256" cy="240" r="200"
+            fill="none"
+            stroke="var(--logo-color)"
+            stroke-width="36"/>
+
+    <!-- Rising sun (upper dome) -->
+    <path d="
+      M 96 240
+      A 160 160 0 0 1 416 240
+      L 416 200
+      A 200 200 0 0 0 96 200
+      Z"
+      fill="var(--logo-color)"/>
+
+    <!-- Fields (3 bands) -->
+    <!-- Main central sweep -->
+    <path d="
+      M 40 360
+      Q 256 250 472 360"
+      fill="none"
+      stroke="var(--logo-color)"
+      stroke-width="56"
+      stroke-linecap="round"
+      stroke-linejoin="round"/>
+
+    <!-- Left lower band -->
+    <path d="
+      M 40 420
+      Q 180 350 320 410"
+      fill="none"
+      stroke="var(--logo-color)"
+      stroke-width="44"
+      stroke-linecap="round"
+      stroke-linejoin="round"/>
+
+    <!-- Right lower band -->
+    <path d="
+      M 200 420
+      Q 360 350 472 400"
+      fill="none"
+      stroke="var(--logo-color)"
+      stroke-width="44"
+      stroke-linecap="round"
+      stroke-linejoin="round"/>
+
+    <!-- Trim top edge to match ring (avoids overdraw) -->
+    <rect x="0" y="0" width="512" height="40" fill="none"/>
+  </g>
+
+  <!-- Text: 'Seso Labor' -->
+  <!-- Keep text as real text for accessibility; change font-family to match your app -->
+  <g transform="translate(0, 460)">
+    <text x="50%" y="0"
+          text-anchor="middle"
+          fill="var(--text-color)"
+          font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+          font-weight="700"
+          font-size="80">Seso</text>
+    <text x="50%" y="80"
+          text-anchor="middle"
+          fill="var(--text-color)"
+          font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+          font-weight="700"
+          font-size="80">Labor</text>
+  </g>
 </svg>
